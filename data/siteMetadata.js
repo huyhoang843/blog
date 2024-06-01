@@ -6,7 +6,7 @@ const siteMetadata = {
   description: 'A blog created with Next.js and Tailwind.css',
   language: 'en-us',
   theme: 'system', // system, dark or light
-  siteUrl: 'https://hoangnguyen-cloud84.github.io/blog/',
+  siteUrl: 'https://huyhoang843.github.io/blog',
   siteRepo: 'https://github.com/huyhoang843/blog',
   // siteLogo: '/static/images/logo.png',
   // socialBanner: '/static/images/twitter-card.png',

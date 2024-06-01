@@ -1,1 +1,10 @@
-{ "next-js": 1, "tailwind": 1, "guide": 1 }
+{
+  "aws": 1,
+  "devops": 1,
+  "reactjs": 1,
+  "webapp": 1,
+  "frontend": 1,
+  "cdn": 1,
+  "cloudfront": 1,
+  "s3": 1
+}

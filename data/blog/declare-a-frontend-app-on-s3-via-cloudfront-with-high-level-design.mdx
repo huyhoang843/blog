@@ -1,0 +1,169 @@
+---
+title: 'Declare a Front End App on S3 via CloudFront with high-level design'
+date: '2024-06-01'
+tags: ['aws', 'devops', 'reactjs', 'webapp', 'frontend', 'cdn', 'cloudfront', 's3']
+summary: 'Host a static website on an S3 bucket with Route53, CloudFront and AWS Certificate Manager with high level design.'
+images: ['/static/images/2.declare-a-frontend-app-on-s3-via-cloudfront-with-high-level-design.jpg']
+---
+
+![Declare a Front End App on S3 via CloudFront with high-level design](/static/images/2.declare-a-frontend-app-on-s3-via-cloudfront-with-high-level-design.jpg)
+
+## 1. What?
+
+In this post, we will host a static website on an S3 bucket with Route53, CloudFront and AWS Certificate Manager. The Website need to ensure high security with these Acceptance Criteria:
+
+- S3 bucket must be not public.
+- End user can not access the Amazon CloudFront and AWS S3
+- End user can only access the WebApp via the Domain
+
+The CDN which has the permission to view the S3 bucket privately with the help of bucket policy.
+
+## 2. Why?
+
+At the beginning, I want to have a WebApp for my kid that is called FingerMath App. This will be a simple React App on Front End. You can find out what is the FingerMath methodology at the end of this post.
+
+Also, I want to have a solution that will be cost-effective and scalable with high performance. For this reason, I choose the combination of S3, CloudFront on AWS. With this architecture, end user can access the the WebApp via the CDN which has the permission to view the S3 bucket privately with the help of bucket policy.
+
+![Fingermath methodolgy](/static/images/2.finger-math-methodology.jpg)
+
+## 3. Why do we need S3 and CloudFront?
+
+In summary, combining AWS S3 and CloudFront provides a scalable, highly available, and cost-effective solution for storing and delivering static websites globally with improved performance and security.
+
+- Scalability and High Availability: S3 provides highly scalable and durable storage for static website assets, ensuring that the website can handle high traffic and remain available even during peak usage. CloudFront, as a globally distributed CDN, further enhances scalability by caching and delivering content from edge locations close to the user, reducing latency and improving performance.
+- Cost-Effectiveness: S3 and CloudFront offer cost-effective solutions for hosting and delivering static websites. S3 provides affordable storage options, while CloudFront's pay-as-you-go pricing model helps optimize costs by minimizing data transfer and reducing bandwidth costs.
+- Global Content Delivery: CloudFront caches website content in edge locations worldwide, ensuring that users can access the website quickly regardless of their geographical location. This improves the website's performance and user experience by reducing latency and improving load times.
+- Security and Access Control: S3 provides robust security features. CloudFront supports SSL/TLS encryption and provides options for securing content delivery.
+- Easy Management and Deployment: AWS provides user-friendly tools and APIs for managing S3 buckets and CloudFront distributions.
+
+![Why do we need S3 and CloudFront?](/static/images/2.s3-and-cloudfront.jpg)
+
+## 4. How to do?
+
+Overall, we will complete the task in four steps:
+
+- Create and update S3 bucket
+- Request certificate with AWS Certificate Manager
+- Setup CDN with CloudFront
+- Create an alias DNS record on Route53
+
+### 4.1. Create and update S3 bucket
+
+#### Create S3 bucket
+
+Login into your AWS account, on the top center of the AWS console, jump to the search bar at the top and search for **_S3_**.
+
+![Create S3 bucket](/static/images/2.1.create-S3-bucket.jpeg)
+
+Inside the S3 dashboard, click on **_Create bucket_**.
+
+![Create S3 bucket](/static/images/2.1.create-S3-bucket-2.jpeg)
+
+In bucket name, please fill out the bucket name we want to create (e.g. **_finger-math-app-bucket-v2_**). Also, please confirm these options:
+
+- ACLs disabled (recommended)
+- Block all public access
+- All other options just like default
+
+#### Set up S3 for static website hosting
+
+After creating the bucket successfully, open this bucket and switch to Properties Tab and search the **_Static website hosting_** section, click on **_Edit_** button
+
+![Set up S3 for static website hosting](/static/images/2.2.set-up-S3-for-static-website-hosting.jpeg)
+
+The default option be **_Disable_**, change it to **_Enable_**. Also, Fill out the index document and Error document with **_index.html_**
+
+![Set up S3 for static website hosting](/static/images/2.2.set-up-S3-for-static-website-hosting-2.jpeg)
+
+#### Upload build files to S3 bucket
+
+Use some tools to upload the build folder such as: AWS Console, AWS CLI, Jenkins, Github Actions, Bitbucket pipelines, …
+
+![Upload build files to S3 bucket](/static/images/2.3.upload-build-files-to-S3-bucket.jpeg)
+
+### 4.2. Request certificate with AWS Certificate Manager
+
+On the top center of the AWS console, jump to the search bar at the top and search for Certificate Manager and click on this service.
+When the AWS Certificate Manager is opened, click on **_Request certificate_** and then choose the Option **_Request a public certificate_** to obtain new SSL certificate.
+
+![Request certificate with AWS Certificate Manager](/static/images/2.4.request-certificate-with-aws-certificate-manager.jpeg)
+
+On the next step, fill out the information as below and then click **_Request_**:
+
+- Domain names, e.g fingermath-v2.primax.cloud
+- Validation method, e.g. DNS validation - recommended
+- Key algorithm, e.g RSA 2048
+
+![Request certificate with AWS Certificate Manager](/static/images/2.5.request-certificate-with-aws-certificate-manager.jpeg)
+
+After the certificate is requested successfully, we need to create DNS records in **_Amazon Route 53_** for validation by clicking on the created certificate.
+
+![Request certificate with AWS Certificate Manager](/static/images/2.6.request-certificate-with-aws-certificate-manager.jpeg)
+
+On next step, at the section **_Domains_**, click on button **_Create Records_** in **_Route 53_**
+
+![Request certificate with AWS Certificate Manager](/static/images/2.7.request-certificate-with-aws-certificate-manager.jpeg)
+
+On next step, click on **_Create records_**
+
+![Request certificate with AWS Certificate Manager](/static/images/2.8.request-certificate-with-aws-certificate-manager.jpeg)
+
+After a few minutes, the Status will change from **_Pending Validation_** to **_Issued_**
+
+![Request certificate with AWS Certificate Manager](/static/images/2.9.request-certificate-with-aws-certificate-manager.jpeg)
+
+### 4.3. Setup CDN with CloudFront
+
+On the top center of the AWS console, jump to the search bar at the top and search for CloudFront and click on this service.
+When the **_CloudFront_** is opened, click on **_Distributions_** and then choose **_Create distribution_**.
+
+![Setup CDN with CloudFront](/static/images/2.10.setup-cdn-with-cloudfront.jpeg)
+
+On the next step, make sure that:
+
+- The S3 bucket that we have created before as **_Origin Domain_**, e.g. finger-math-app-bucket-v2.s3.ap-southeast-1.amazonaws.com
+- **_Legacy access identities_** as **_Origin access_**: We need to create the OAI (Origin access identity) for this by clicking on Button **_Create new OAI_**. Choose a specific name, for example: finger-math-app-bucket-v2-OAI and then click **_Create_**. Please note that the bucket policy will need to select Option **_Yes, update the bucket policy_**.
+
+![Setup CDN with CloudFront](/static/images/2.11.setup-cdn-with-cloudfront.jpeg)
+
+- Redirect HTTP to HTTPS as Viewer protocol policy
+- GET, HEAD, OPTIONS as Allowed HTTP methods
+- Do not enable security protections as **_Web Application Firewall (WAF)_**
+- A domain name created on Step 2.1 as **_Alternate domain name (CNAME)_** (e.g.: fingermath-v2.primax.cloud)
+- HTTP/2, HTTP/3 as **_Supported HTTP versions_**
+- The certificate that we have requested on Step before as **_Custom SSL certificate_**
+- index.html as **_Default root object_**
+- All other options just like default
+
+After we click on Create distribution, AWS will deploy in several minutes (~ 10 mins). After deploying successfully, the Last modified will change from **_Deploying_** to a **_specific datetime_** (e.g. July 1, 2023 at 9:37:42 AM UTC)
+
+### 4.4. Create an alias DNS record on Route53
+
+On the top center of the AWS console, jump to the search bar at the top and search for Route53 and click on this service.
+When the **_Route53_** is opened, click on your Hosted zone (e.g. primax.cloud) and then click on your Domain name
+
+![Create an alias DNS record on Route53](/static/images/2.12.create-an-alias-dns-record-on-route53.jpeg)
+
+On the next Step, you will see a list of records of your Domain Name. Click on **_Create record_**
+
+![Create an alias DNS record on Route53](/static/images/2.13.create-an-alias-dns-record-on-route53.jpeg)
+
+On the next Step, make sure to choose:
+
+- Your preferred subdomain as **_Record name_** (e.g. **_fingermath-v2_**)
+- Turn on the **_Alias_** radio button
+- Alias to CloudFront Distribution as **_Route traffic_** to
+- Choose the Cloud Front that you have created before
+- All other options just like default
+
+![Create an alias DNS record on Route53](/static/images/2.14.create-an-alias-dns-record-on-route53.jpeg)
+
+And voila, your website is going online in few minutes (~5 mins)
+
+### Reference: What is FingerMath?
+
+I have created a React App that will teach the Kids how to calculate with Finger Math methodology on this [website](https://fingermath.primax.cloud/). So, please be free to use this.
+
+Finger Math is a mathematical technique that uses fingers as a visual aid for performing calculations. It is commonly used as a tool to teach basic arithmetic concepts, particularly addition and subtraction, to young children.
+
+Finger Math helps children develop number sense, improve their counting skills, and gain a conceptual understanding of basic arithmetic operations. It engages their tactile and visual senses, making math more tangible and accessible. It is often used as a foundational learning tool before children progress to mental math strategies.
